@@ -9,6 +9,7 @@
 vlcPlayer::vlcPlayer(QUrl url, QWidget *parent) :
     QMainWindow(parent)
 {
+    statusBar()->showMessage("Initializing");
     mUrl = url;
     QWidget *widget = new QWidget;
     setCentralWidget(widget);
@@ -21,7 +22,7 @@ vlcPlayer::vlcPlayer(QUrl url, QWidget *parent) :
     pauseBtn = createButton("Pause", SLOT(pause()));
 
     volumeSlider = new QSlider(Qt::Orientation(Qt::Horizontal));
-    volumeSlider->setValue(100);
+    volumeSlider->setValue(50);
     connect(volumeSlider, SIGNAL(sliderMoved(int)),
             this, SLOT(volumeChanged()));
 
@@ -60,7 +61,7 @@ vlcPlayer::vlcPlayer(QUrl url, QWidget *parent) :
     playBtn->setEnabled(true);
     pauseBtn->setEnabled(false);
     stopBtn->setEnabled(false);
-
+    statusBar()->showMessage("Ready to play");
 }
 
 vlcPlayer::~vlcPlayer()
@@ -130,15 +131,21 @@ void vlcPlayer::play()
     stopBtn->setEnabled(true);
     if(qtVlcSource->getUrl() == "" || !qtVlcSource->isPlaying())
     {
-        qDebug() << "getPlsFirstTrack...";
-        playList *pl = new playList(mUrl);
-        if (pl->getPlsFirstTrack() == "")
+        if(trackUrl == "")
         {
-            stop();
-            return;
+            statusBar()->showMessage("Getting playlist...");
+            qDebug() << "getPlsFirstTrack...";
+            playList *pl = new playList(mUrl);
+            if (pl->getPlsFirstTrack() == "")
+            {
+                stop();
+                return;
+            }
+            trackUrl = pl->getPlsFirstTrack();
         }
-        qtVlcSource->init(pl->getPlsFirstTrack().toUtf8().constData(), "tmp.wav"); //"http://scfire-ntc-aa06.stream.aol.com:80/stream/1011"
+        qtVlcSource->init(trackUrl.toUtf8().constData(), "tmp.wav"); //"http://scfire-ntc-aa06.stream.aol.com:80/stream/1011"
         qtVlcSource->play();
+        statusBar()->showMessage("Buffering...");
         while(qtVlcSource->currentTime() <= 0)
         {
             qDebug() << "buffering...";
@@ -156,6 +163,7 @@ void vlcPlayer::play()
     qtVlcOut->play();
     qDebug() << qtVlcSource->getArtist() << qtVlcSource->getTitle() << qtVlcSource->getNowPlaying();
     this->setWindowTitle(qtVlcSource->getNowPlaying());
+    statusBar()->showMessage("");
 }
 void vlcPlayer::stop()
 {
@@ -171,6 +179,7 @@ void vlcPlayer::stop()
     {
         qtVlcSource->stop();
     }
+    statusBar()->showMessage("Stopped");
 }
 void vlcPlayer::pause()
 {
@@ -179,4 +188,5 @@ void vlcPlayer::pause()
     pauseBtn->setEnabled(false);
     stopBtn->setEnabled(true);
     qtVlcOut->pause();
+    statusBar()->showMessage("Paused");
 }

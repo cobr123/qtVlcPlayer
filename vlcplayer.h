@@ -38,6 +38,7 @@ private:
     QSlider *volumeSlider;
     QLabel  *statusTime;
     QUrl    mUrl;
+    QString trackUrl;
 };
 
 #endif // VLCPLAYER_H

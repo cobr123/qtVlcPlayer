@@ -109,7 +109,6 @@ int qtVlc::isPlaying()
 }
 void qtVlc::init(const char* url, const char* TmpFile)
 {
-    qDebug() << QString(url);
     if(TmpFile)
     {
         char result[1000];   // array to hold the result.
@@ -122,7 +121,7 @@ void qtVlc::init(const char* url, const char* TmpFile)
         const char * const vlc_args[] = {
               "-I", "dummy", // Don't use any interface
               "--ignore-config", // Don't use VLC's config
-              "--extraintf=logger", // Log anything
+//              "--extraintf=logger", // Log anything
               "--verbose=2", // Be much more verbose then normal for debugging purpose
               result  // Stream to file
                };
