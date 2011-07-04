@@ -21,11 +21,13 @@ public:
     void pause();
     QString getUrl() { return mUrl; }
     int    isPlaying() { return libvlc_media_player_is_playing(mp); }
-    void timeChanged();
+    int    currentTime();
+    void   setPosition(int, int);
 
 signals:
     void playbackCommenced();
-    void tickInternal(qint64 time);
+    void timeChanged();
+private slots:
 
 private:
     libvlc_event_manager_t *m_eventManager;

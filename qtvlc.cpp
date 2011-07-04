@@ -27,9 +27,7 @@ void qtVlc::connectToPlayerVLCEvents()
         libvlc_MediaPlayerSeekableChanged,
         //libvlc_MediaPlayerPausableChanged, // Phonon has no use for this
         libvlc_MediaPlayerBuffering,
-        libvlc_MediaMetaChanged,
-        libvlc_MediaPlayerLengthChanged,
-        libvlc_MediaDurationChanged
+        libvlc_MediaPlayerLengthChanged
     };
     int i_nbEvents = sizeof(eventsMediaPlayer) / sizeof(*eventsMediaPlayer);
     for (int i = 0; i < i_nbEvents; i++) {
@@ -60,15 +58,22 @@ void qtVlc::eventCallback(const libvlc_event_t *event, void *data)
 
     if (event->type == libvlc_MediaPlayerTimeChanged) {
         //qDebug() << "event:" << libvlc_event_type_name(event->type) << that->getUrl();
-        //emit that->tickInternal(that->currentTime());
-        that->timeChanged();
+        emit that->timeChanged();
+        //that->timeChanged();
 
     }
 }
 
-void qtVlc::timeChanged()
+void qtVlc::setPosition(int pos, int max)
 {
-    qDebug() << libvlc_media_player_get_time(mp);
+    float newPos = (float)pos / (float)max;
+    //qDebug() << "newPosition" << newPos << (float)max;
+    libvlc_media_player_set_position(mp, newPos);
+}
+
+int  qtVlc::currentTime()
+{
+    return libvlc_media_player_get_time(mp);
 }
 
 void qtVlc::init(const char* url, const char* TmpFile)

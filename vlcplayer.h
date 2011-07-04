@@ -3,11 +3,11 @@
 
 #include "qtvlc.h"
 
-#include <QWidget>
+#include <QtGui>
 
 class Button;
 
-class vlcPlayer : public QWidget
+class vlcPlayer : public QMainWindow
 {
     Q_OBJECT
 public:
@@ -22,6 +22,9 @@ private slots:
     void play();
     void stop();
     void pause();
+    void timeChanged();
+    void posChanged();
+    void updatePosTime();
 
 private:
     Button *createButton(const QString &text, const char *member);
@@ -30,6 +33,8 @@ private:
     Button *playBtn;
     Button *stopBtn;
     Button *pauseBtn;
+    QSlider *seekPosSlider;
+    QLabel  *statusTime;
 };
 
 #endif // VLCPLAYER_H
