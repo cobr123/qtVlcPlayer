@@ -20,7 +20,7 @@ public:
     void stop();
     void pause();
     QString getUrl() { return mUrl; }
-    int    isPlaying() { return libvlc_media_player_is_playing(mp); }
+    int    isPlaying();
     int    currentTime();
     void   setPosition(int, int);
     void   setVolume(int);

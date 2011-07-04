@@ -4,10 +4,12 @@
 #include "qtvlc.h"
 #include "vlcplayer.h"
 #include "button.h"
+#include "playlist.h"
 
-vlcPlayer::vlcPlayer(QWidget *parent) :
+vlcPlayer::vlcPlayer(QUrl url, QWidget *parent) :
     QMainWindow(parent)
 {
+    mUrl = url;
     QWidget *widget = new QWidget;
     setCentralWidget(widget);
 
@@ -128,7 +130,14 @@ void vlcPlayer::play()
     stopBtn->setEnabled(true);
     if(qtVlcSource->getUrl() == "" || !qtVlcSource->isPlaying())
     {
-        qtVlcSource->init("http://scfire-ntc-aa06.stream.aol.com:80/stream/1011", "tmp.wav");
+        qDebug() << "getPlsFirstTrack...";
+        playList *pl = new playList(mUrl);
+        if (pl->getPlsFirstTrack() == "")
+        {
+            stop();
+            return;
+        }
+        qtVlcSource->init(pl->getPlsFirstTrack().toUtf8().constData(), "tmp.wav"); //"http://scfire-ntc-aa06.stream.aol.com:80/stream/1011"
         qtVlcSource->play();
         while(qtVlcSource->currentTime() <= 0)
         {
@@ -154,13 +163,14 @@ void vlcPlayer::stop()
     playBtn->setEnabled(true);
     pauseBtn->setEnabled(false);
     stopBtn->setEnabled(false);
-    qtVlcOut->stop();
-    qtVlcSource->stop();
-    statusTime->setText(
-                QTime(0,0,0,0).toString("hh:mm:ss")
-                + " / "
-                + QTime(0,0,0,0).toString("hh:mm:ss")
-                );
+    if(qtVlcOut->isPlaying())
+    {
+        qtVlcOut->stop();
+    }
+    if(qtVlcSource->isPlaying())
+    {
+        qtVlcSource->stop();
+    }
 }
 void vlcPlayer::pause()
 {

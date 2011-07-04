@@ -11,7 +11,7 @@ class vlcPlayer : public QMainWindow
 {
     Q_OBJECT
 public:
-    vlcPlayer(QWidget *parent = 0);
+    vlcPlayer(QUrl, QWidget *parent = 0);
     ~vlcPlayer();
 
 signals:
@@ -37,6 +37,7 @@ private:
     QSlider *positionSlider;
     QSlider *volumeSlider;
     QLabel  *statusTime;
+    QUrl    mUrl;
 };
 
 #endif // VLCPLAYER_H

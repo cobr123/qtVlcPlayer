@@ -96,8 +96,20 @@ int  qtVlc::currentTime()
     return libvlc_media_player_get_time(mp);
 }
 
+int qtVlc::isPlaying()
+{
+    if(mUrl != "")
+    {
+        return libvlc_media_player_is_playing(mp);
+    }
+    else
+    {
+        return false;
+    }
+}
 void qtVlc::init(const char* url, const char* TmpFile)
 {
+    qDebug() << QString(url);
     if(TmpFile)
     {
         char result[1000];   // array to hold the result.
