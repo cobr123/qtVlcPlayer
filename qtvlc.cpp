@@ -153,7 +153,7 @@ void qtVlc::stop()
 void qtVlc::pause()
 {
     /* pause the media_player */
-    libvlc_media_player_pause (mp);
+    libvlc_media_player_pause(mp);
 }
 qtVlc::~qtVlc()
 {

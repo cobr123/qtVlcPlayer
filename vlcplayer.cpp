@@ -139,8 +139,10 @@ void vlcPlayer::play()
             waitCondition.wait(&dummy, 1000);
         }
     }
-    qtVlcOut->init("tmp.wav", 0);
-    qtVlcOut->setPosition(positionSlider->value(), qtVlcSource->currentTime());
+    if(qtVlcOut->getUrl() == "")
+    {
+        qtVlcOut->init("tmp.wav", 0);
+    }
     qtVlcOut->setVolume(volumeSlider->value());
     qtVlcOut->play();
     qDebug() << qtVlcSource->getArtist() << qtVlcSource->getTitle() << qtVlcSource->getNowPlaying();
@@ -154,6 +156,11 @@ void vlcPlayer::stop()
     stopBtn->setEnabled(false);
     qtVlcOut->stop();
     qtVlcSource->stop();
+    statusTime->setText(
+                QTime(0,0,0,0).toString("hh:mm:ss")
+                + " / "
+                + QTime(0,0,0,0).toString("hh:mm:ss")
+                );
 }
 void vlcPlayer::pause()
 {
