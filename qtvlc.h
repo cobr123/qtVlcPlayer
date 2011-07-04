@@ -23,6 +23,10 @@ public:
     int    isPlaying() { return libvlc_media_player_is_playing(mp); }
     int    currentTime();
     void   setPosition(int, int);
+    void   setVolume(int);
+    QString  getTitle();
+    QString  getArtist();
+    QString  getNowPlaying();
 
 signals:
     void playbackCommenced();

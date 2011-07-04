@@ -23,7 +23,8 @@ private slots:
     void stop();
     void pause();
     void timeChanged();
-    void posChanged();
+    void positionChanged();
+    void volumeChanged();
     void updatePosTime();
 
 private:
@@ -33,7 +34,8 @@ private:
     Button *playBtn;
     Button *stopBtn;
     Button *pauseBtn;
-    QSlider *seekPosSlider;
+    QSlider *positionSlider;
+    QSlider *volumeSlider;
     QLabel  *statusTime;
 };
 

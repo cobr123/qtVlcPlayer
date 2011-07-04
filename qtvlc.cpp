@@ -51,8 +51,8 @@ void qtVlc::eventCallback(const libvlc_event_t *event, void *data)
         emit that->playbackCommenced();
     }
 
-    if (event->type == libvlc_MediaPlayerBuffering) {
-        //qDebug() << "event:" << libvlc_event_type_name(event->type) << that->getUrl();
+    if (event->type == libvlc_MediaPlayerTitleChanged) {
+        qDebug() << "event:" << libvlc_event_type_name(event->type) << that->getUrl();
         //emit that->stateChanged(Phonon::BufferingState);
     }
 
@@ -64,11 +64,31 @@ void qtVlc::eventCallback(const libvlc_event_t *event, void *data)
     }
 }
 
+QString qtVlc::getTitle()
+{
+    return QString(libvlc_media_get_meta(m, libvlc_meta_Title));
+}
+
+QString qtVlc::getArtist()
+{
+    return QString(libvlc_media_get_meta(m, libvlc_meta_Artist));
+}
+
+QString qtVlc::getNowPlaying()
+{
+    return QString(libvlc_media_get_meta(m, libvlc_meta_NowPlaying));
+}
+
 void qtVlc::setPosition(int pos, int max)
 {
     float newPos = (float)pos / (float)max;
     //qDebug() << "newPosition" << newPos << (float)max;
     libvlc_media_player_set_position(mp, newPos);
+}
+
+void qtVlc::setVolume(int vol)
+{
+    libvlc_audio_set_volume(mp, vol);
 }
 
 int  qtVlc::currentTime()

@@ -13,27 +13,31 @@ vlcPlayer::vlcPlayer(QWidget *parent) :
 
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *Layout1 = new QHBoxLayout;
-#if defined(Q_OS_SYMBIAN) || defined(Q_WS_MAEMO_5) || defined(Q_WS_SIMULATOR)
-    //mainLayout->setSizeConstraint(QLayout::SetNoConstraint);
-#else
-    //mainLayout->setSizeConstraint(QLayout::SetFixedSize);
-#endif
 
     playBtn = createButton("Play", SLOT(play()));
     stopBtn = createButton("Stop", SLOT(stop()));
     pauseBtn = createButton("Pause", SLOT(pause()));
 
+    volumeSlider = new QSlider(Qt::Orientation(Qt::Horizontal));
+    volumeSlider->setValue(100);
+    connect(volumeSlider, SIGNAL(sliderMoved(int)),
+            this, SLOT(volumeChanged()));
+
     Layout1->addWidget(playBtn);
     Layout1->addWidget(pauseBtn);
     Layout1->addWidget(stopBtn);
+    Layout1->addWidget(volumeSlider);
 
     mainLayout->addLayout(Layout1);
     //mainLayout->addLayout(Layout2);
 
-    seekPosSlider = new QSlider(Qt::Orientation(Qt::Horizontal));
-    seekPosSlider->setValue(0);
-
-    mainLayout->addWidget(seekPosSlider);
+    positionSlider = new QSlider(Qt::Orientation(Qt::Horizontal));
+    positionSlider->setValue(0);
+    connect(positionSlider, SIGNAL(sliderReleased())
+            ,this, SLOT(positionChanged()));
+    connect(positionSlider, SIGNAL(sliderMoved(int))
+            ,this, SLOT(updatePosTime()));
+    mainLayout->addWidget(positionSlider);
 
     widget->setLayout(mainLayout);
     setWindowTitle(tr("Player"));
@@ -50,10 +54,6 @@ vlcPlayer::vlcPlayer(QWidget *parent) :
 
     connect(qtVlcSource, SIGNAL(timeChanged())
             ,this, SLOT(timeChanged()));
-    connect(seekPosSlider, SIGNAL(sliderReleased())
-            ,this, SLOT(posChanged()));
-    connect(seekPosSlider, SIGNAL(sliderMoved(int))
-            ,this, SLOT(updatePosTime()));
 
     playBtn->setEnabled(true);
     pauseBtn->setEnabled(false);
@@ -76,31 +76,36 @@ vlcPlayer::~vlcPlayer()
     }
 }
 
-void vlcPlayer::posChanged()
+void vlcPlayer::positionChanged()
 {
-    qtVlcOut->setPosition(seekPosSlider->value(), qtVlcSource->currentTime());
+    qtVlcOut->setPosition(positionSlider->value(), qtVlcSource->currentTime());
+}
+
+void vlcPlayer::volumeChanged()
+{
+    qtVlcOut->setVolume(volumeSlider->value());
 }
 
 void vlcPlayer::timeChanged()
 {
-    if(!seekPosSlider->isSliderDown())
+    if(!positionSlider->isSliderDown())
     {
         statusTime->setText(
                     QTime(0,0,0,0).addMSecs(qtVlcOut->currentTime()).toString("hh:mm:ss")
                     + " / "
                     + QTime(0,0,0,0).addMSecs(qtVlcSource->currentTime()).toString("hh:mm:ss")
                     );
-        seekPosSlider->setValue(qtVlcOut->currentTime());
-        seekPosSlider->setMaximum(qtVlcSource->currentTime());
+        positionSlider->setValue(qtVlcOut->currentTime());
+        positionSlider->setMaximum(qtVlcSource->currentTime());
     }
 }
 
 void vlcPlayer::updatePosTime()
 {
-    if(seekPosSlider->isSliderDown())
+    if(positionSlider->isSliderDown())
     {
         statusTime->setText(
-                    QTime(0,0,0,0).addMSecs(seekPosSlider->value()).toString("hh:mm:ss")
+                    QTime(0,0,0,0).addMSecs(positionSlider->value()).toString("hh:mm:ss")
                     + " / "
                     + QTime(0,0,0,0).addMSecs(qtVlcSource->currentTime()).toString("hh:mm:ss")
                     );
@@ -135,8 +140,11 @@ void vlcPlayer::play()
         }
     }
     qtVlcOut->init("tmp.wav", 0);
-    qtVlcOut->setPosition(seekPosSlider->value(), qtVlcSource->currentTime());
+    qtVlcOut->setPosition(positionSlider->value(), qtVlcSource->currentTime());
+    qtVlcOut->setVolume(volumeSlider->value());
     qtVlcOut->play();
+    qDebug() << qtVlcSource->getArtist() << qtVlcSource->getTitle() << qtVlcSource->getNowPlaying();
+    this->setWindowTitle(qtVlcSource->getNowPlaying());
 }
 void vlcPlayer::stop()
 {
