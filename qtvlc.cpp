@@ -36,6 +36,11 @@ void qtVlc::connectToPlayerVLCEvents()
     }
 }
 
+QString qtVlc::getUrl()
+{
+    return mUrl;
+}
+
 void qtVlc::eventCallback(const libvlc_event_t *event, void *data)
 {
     //static int i_first_time_media_player_time_changed = 0;
@@ -43,12 +48,12 @@ void qtVlc::eventCallback(const libvlc_event_t *event, void *data)
 
     qtVlc *const that = static_cast<qtVlc *>(data);
 
-    //qDebug() << "event:" << libvlc_event_type_name(event->type) << that->getUrl();
+    if (event->type != libvlc_MediaPlayerTimeChanged) qDebug() << "event:" << libvlc_event_type_name(event->type) << that->getUrl();
 
     // Media player events
-    if (event->type == libvlc_MediaPlayerPlaying) {
+    if (event->type == libvlc_MediaPlayerStopped) {
         //qDebug() << "event:" << libvlc_event_type_name(event->type) << that->getUrl();
-        emit that->playbackCommenced();
+        emit that->playerStopped();
     }
 
     if (event->type == libvlc_MediaPlayerTitleChanged) {
@@ -121,7 +126,7 @@ void qtVlc::init(const char* url, const char* TmpFile)
         const char * const vlc_args[] = {
               "-I", "dummy", // Don't use any interface
               "--ignore-config", // Don't use VLC's config
-//              "--extraintf=logger", // Log anything
+              "--extraintf=logger", // Log anything
               "--verbose=2", // Be much more verbose then normal for debugging purpose
               result  // Stream to file
                };

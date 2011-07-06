@@ -11,6 +11,9 @@ vlcPlayer::vlcPlayer(QUrl url, QWidget *parent) :
 {
     statusBar()->showMessage("Initializing");
     mUrl = url;
+    bPlaying = false;
+    poller = new QTimer(this);
+    connect(poller, SIGNAL(timeout()), this, SLOT(updateInterface()));
     QWidget *widget = new QWidget;
     setCentralWidget(widget);
 
@@ -31,6 +34,11 @@ vlcPlayer::vlcPlayer(QUrl url, QWidget *parent) :
     Layout1->addWidget(stopBtn);
     Layout1->addWidget(volumeSlider);
 
+    timeLeft = new QLabel;
+    timeLeft->setText("");
+    timeLeft->setFont(QFont("Verdana", 20));
+
+    mainLayout->addWidget(timeLeft);
     mainLayout->addLayout(Layout1);
     //mainLayout->addLayout(Layout2);
 
@@ -62,10 +70,20 @@ vlcPlayer::vlcPlayer(QUrl url, QWidget *parent) :
     pauseBtn->setEnabled(false);
     stopBtn->setEnabled(false);
     statusBar()->showMessage("Ready to play");
+    poller->start(1000);
+
+    //6 = "Saturday" onAir day, 23 - hh onAir time, 00 - mm onAir time, 3 - onAir hours length
+    //cal = new calendar(6, 23, 00, 3);
+    cal = new calendar(3, 9, 00, 2);
+    if(cal->isOnAir())
+    {
+        play();
+    }
 }
 
 vlcPlayer::~vlcPlayer()
 {
+    bPlaying = false;
     if(qtVlcOut->getUrl() != "")
     {
         qDebug() << "~vlcPlayer qtVlcOut";
@@ -79,19 +97,34 @@ vlcPlayer::~vlcPlayer()
     }
 }
 
+void vlcPlayer::updateInterface()
+{
+    timeLeft->setText(cal->timeLeft());
+    if(bPlaying)
+    {
+        emit timeChanged();
+    }
+}
+
 void vlcPlayer::positionChanged()
 {
-    qtVlcOut->setPosition(positionSlider->value(), qtVlcSource->currentTime());
+    if(qtVlcOut->getUrl() != "")
+    {
+        qtVlcOut->setPosition(positionSlider->value(), qtVlcSource->currentTime());
+    }
 }
 
 void vlcPlayer::volumeChanged()
 {
-    qtVlcOut->setVolume(volumeSlider->value());
+    if(qtVlcOut->getUrl() != "")
+    {
+        qtVlcOut->setVolume(volumeSlider->value());
+    }
 }
 
 void vlcPlayer::timeChanged()
 {
-    if(!positionSlider->isSliderDown())
+    if(!positionSlider->isSliderDown() && qtVlcOut->getUrl() != "")
     {
         statusTime->setText(
                     QTime(0,0,0,0).addMSecs(qtVlcOut->currentTime()).toString("hh:mm:ss")
@@ -105,7 +138,7 @@ void vlcPlayer::timeChanged()
 
 void vlcPlayer::updatePosTime()
 {
-    if(positionSlider->isSliderDown())
+    if(positionSlider->isSliderDown() && qtVlcOut->getUrl() != "")
     {
         statusTime->setText(
                     QTime(0,0,0,0).addMSecs(positionSlider->value()).toString("hh:mm:ss")
@@ -122,13 +155,31 @@ Button *vlcPlayer::createButton(const QString &text, const char *member)
     return button;
 }
 
-
-void vlcPlayer::play()
+void vlcPlayer::restartSource()
 {
-    qDebug() << "play";
-    playBtn->setEnabled(false);
-    pauseBtn->setEnabled(true);
-    stopBtn->setEnabled(true);
+    if(bPlaying)
+    {
+        qDebug() << "restartSource()";
+        if(!qtVlcOut->isPlaying())
+        {
+            pause();
+
+            QMutex dummy;
+            dummy.lock();
+            QWaitCondition waitCondition;
+            waitCondition.wait(&dummy, 500);
+
+            play();
+        }
+        else
+        {
+            playSource();
+        }
+    }
+}
+
+void vlcPlayer::playSource()
+{
     if(qtVlcSource->getUrl() == "" || !qtVlcSource->isPlaying())
     {
         if(trackUrl == "")
@@ -155,6 +206,16 @@ void vlcPlayer::play()
             waitCondition.wait(&dummy, 1000);
         }
     }
+}
+
+void vlcPlayer::play()
+{
+    qDebug() << "play";
+    playBtn->setEnabled(false);
+    pauseBtn->setEnabled(true);
+    stopBtn->setEnabled(true);
+    bPlaying = true;
+    playSource();
     if(qtVlcOut->getUrl() == "")
     {
         qtVlcOut->init("tmp.wav", 0);
@@ -162,15 +223,17 @@ void vlcPlayer::play()
     qtVlcOut->setVolume(volumeSlider->value());
     qtVlcOut->play();
     qDebug() << qtVlcSource->getArtist() << qtVlcSource->getTitle() << qtVlcSource->getNowPlaying();
-    this->setWindowTitle(qtVlcSource->getNowPlaying());
-    statusBar()->showMessage("");
+    //this->setWindowTitle(qtVlcSource->getNowPlaying());
+    statusBar()->showMessage(qtVlcSource->getNowPlaying());
 }
+
 void vlcPlayer::stop()
 {
     qDebug() << "stop";
     playBtn->setEnabled(true);
     pauseBtn->setEnabled(false);
     stopBtn->setEnabled(false);
+    bPlaying = false;
     if(qtVlcOut->isPlaying())
     {
         qtVlcOut->stop();
@@ -179,6 +242,7 @@ void vlcPlayer::stop()
     {
         qtVlcSource->stop();
     }
+    positionSlider->setValue(0);
     statusBar()->showMessage("Stopped");
 }
 void vlcPlayer::pause()

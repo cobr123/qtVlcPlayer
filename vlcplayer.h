@@ -2,6 +2,7 @@
 #define VLCPLAYER_H
 
 #include "qtvlc.h"
+#include "calendar.h"
 
 #include <QtGui>
 
@@ -13,6 +14,7 @@ class vlcPlayer : public QMainWindow
 public:
     vlcPlayer(QUrl, QWidget *parent = 0);
     ~vlcPlayer();
+    bool isPlaying() { return bPlaying; }
 
 signals:
 
@@ -26,8 +28,11 @@ private slots:
     void positionChanged();
     void volumeChanged();
     void updatePosTime();
+    void restartSource();
+    void updateInterface();
 
 private:
+    void    playSource();
     Button *createButton(const QString &text, const char *member);
     qtVlc  *qtVlcSource;
     qtVlc  *qtVlcOut;
@@ -39,6 +44,10 @@ private:
     QLabel  *statusTime;
     QUrl    mUrl;
     QString trackUrl;
+    bool    bPlaying;
+    QTimer  *poller;
+    calendar    *cal;
+    QLabel      *timeLeft;
 };
 
 #endif // VLCPLAYER_H

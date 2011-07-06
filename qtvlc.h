@@ -19,7 +19,7 @@ public:
     void play();
     void stop();
     void pause();
-    QString getUrl() { return mUrl; }
+    QString getUrl();
     int    isPlaying();
     int    currentTime();
     void   setPosition(int, int);
@@ -31,7 +31,7 @@ public:
 signals:
     void playbackCommenced();
     void timeChanged();
-private slots:
+    void playerStopped();
 
 private:
     libvlc_event_manager_t *m_eventManager;

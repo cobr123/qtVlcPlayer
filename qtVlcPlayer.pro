@@ -9,10 +9,12 @@ SOURCES += \
     button.cpp \
     vlcplayer.cpp \
     qtvlc.cpp \
-    playlist.cpp
+    playlist.cpp \
+    calendar.cpp
 
 HEADERS += \
     button.h \
     vlcplayer.h \
     qtvlc.h \
-    playlist.h
+    playlist.h \
+    calendar.h
