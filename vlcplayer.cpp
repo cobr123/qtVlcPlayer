@@ -74,7 +74,7 @@ vlcPlayer::vlcPlayer(QUrl url, QWidget *parent) :
 
     //6 = "Saturday" onAir day, 23 - hh onAir time, 00 - mm onAir time, 3 - onAir hours length
     //cal = new calendar(6, 23, 00, 3);
-    cal = new calendar(3, 9, 00, 2);
+    cal = new calendar(6, 23, 00, 3);
     if(cal->isOnAir())
     {
         play();
