@@ -12,7 +12,7 @@ class vlcPlayer : public QMainWindow
 {
     Q_OBJECT
 public:
-    vlcPlayer(QUrl, QWidget *parent = 0);
+    vlcPlayer(QWidget *parent = 0);
     ~vlcPlayer();
     bool isPlaying() { return bPlaying; }
 
@@ -33,6 +33,8 @@ private slots:
 
 private:
     void    playSource();
+    void    readSettings();
+    void    writeSettings();
     Button *createButton(const QString &text, const char *member);
     qtVlc  *qtVlcSource;
     qtVlc  *qtVlcOut;

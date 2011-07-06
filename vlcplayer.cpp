@@ -6,12 +6,11 @@
 #include "button.h"
 #include "playlist.h"
 
-vlcPlayer::vlcPlayer(QUrl url, QWidget *parent) :
-    QMainWindow(parent)
+vlcPlayer::vlcPlayer(QWidget *parent) :
+    QMainWindow(parent), bPlaying(false)
 {
     statusBar()->showMessage("Initializing");
-    mUrl = url;
-    bPlaying = false;
+    readSettings();
     poller = new QTimer(this);
     connect(poller, SIGNAL(timeout()), this, SLOT(updateInterface()));
     QWidget *widget = new QWidget;
@@ -36,6 +35,7 @@ vlcPlayer::vlcPlayer(QUrl url, QWidget *parent) :
 
     timeLeft = new QLabel;
     timeLeft->setText("");
+    timeLeft->setScaledContents(true);
     timeLeft->setFont(QFont("Verdana", 20));
 
     mainLayout->addWidget(timeLeft);
@@ -67,22 +67,47 @@ vlcPlayer::vlcPlayer(QUrl url, QWidget *parent) :
             ,this, SLOT(timeChanged()));
 
     playBtn->setEnabled(true);
+    playBtn->setFocus();
     pauseBtn->setEnabled(false);
     stopBtn->setEnabled(false);
     statusBar()->showMessage("Ready to play");
     poller->start(1000);
 
-    //6 = "Saturday" onAir day, 23 - hh onAir time, 00 - mm onAir time, 3 - onAir hours length
-    //cal = new calendar(6, 23, 00, 3);
-    cal = new calendar(6, 23, 00, 3);
+    cal = new calendar();
+    timeLeft->setText(cal->timeLeft());
     if(cal->isOnAir())
     {
         play();
     }
 }
 
+void vlcPlayer::writeSettings()
+{
+    QSettings settings("Cobr Soft", "Player");
+
+    settings.beginGroup("MainWindow");
+    settings.setValue("size", size());
+    settings.setValue("pos", pos());
+    settings.endGroup();
+
+    settings.setValue("onAir/url", mUrl.toString());
+}
+
+ void vlcPlayer::readSettings()
+{
+    QSettings settings("Cobr Soft", "Player");
+
+    settings.beginGroup("MainWindow");
+    resize(settings.value("size", QSize(241, 140)).toSize());
+    move(settings.value("pos", QPoint(200, 200)).toPoint());
+    settings.endGroup();
+
+    mUrl = QUrl(settings.value("onAir/url", "http://yp.shoutcast.com/sbin/tunein-station.pls?id=1177953").toString());
+}
+
 vlcPlayer::~vlcPlayer()
 {
+    writeSettings();
     bPlaying = false;
     if(qtVlcOut->getUrl() != "")
     {
@@ -100,9 +125,17 @@ vlcPlayer::~vlcPlayer()
 void vlcPlayer::updateInterface()
 {
     timeLeft->setText(cal->timeLeft());
+
     if(bPlaying)
     {
         emit timeChanged();
+    }
+    else
+    {
+        if(qtVlcOut->getUrl() == "" && cal->isOnAir())
+        {
+            play();
+        }
     }
 }
 
@@ -213,6 +246,7 @@ void vlcPlayer::play()
     qDebug() << "play";
     playBtn->setEnabled(false);
     pauseBtn->setEnabled(true);
+    pauseBtn->setFocus();
     stopBtn->setEnabled(true);
     bPlaying = true;
     playSource();
@@ -231,14 +265,15 @@ void vlcPlayer::stop()
 {
     qDebug() << "stop";
     playBtn->setEnabled(true);
+    playBtn->setFocus();
     pauseBtn->setEnabled(false);
     stopBtn->setEnabled(false);
     bPlaying = false;
-    if(qtVlcOut->isPlaying())
+    if(qtVlcOut->getUrl() != "")
     {
         qtVlcOut->stop();
     }
-    if(qtVlcSource->isPlaying())
+    if(qtVlcSource->getUrl() != "")
     {
         qtVlcSource->stop();
     }
@@ -249,6 +284,7 @@ void vlcPlayer::pause()
 {
     qDebug() << "pause";
     playBtn->setEnabled(true);
+    playBtn->setFocus();
     pauseBtn->setEnabled(false);
     stopBtn->setEnabled(true);
     qtVlcOut->pause();

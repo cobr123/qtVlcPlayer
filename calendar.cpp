@@ -9,21 +9,40 @@
 6 = "Saturday"
 7 = "Sunday"
 */
-//6 = "Saturday" onAir day
-//, 23 - hh onAir time
-//, 00 - mm onAir time
-//, 3 - onAir length
-calendar::calendar(int day, int h, int m, int onAirLen)
+calendar::calendar()
 {
-    dayOfWeek = day;
-    hh = h;
-    mm = m;
-    len = onAirLen;
+    //6 = "Saturday" onAir day, 23 - hh onAir time, 00 - mm onAir time, 3 - onAir hours length
+    readSettings();
     onAir = getNextOnAirDateTime();
     qDebug() << onAir.toString("dd.MM.yyyy hh:mm:ss")
              << "onAir day = " + onAir.date().longDayName(onAir.date().dayOfWeek())
-             << "onAir length = " + QString::number(onAirLen);
+             << "onAir length = " + QString::number(len);
     qDebug() << "is onAir: " << isOnAir();
+}
+
+calendar::~calendar()
+{
+    writeSettings();
+}
+
+void calendar::readSettings()
+{
+    QSettings settings("Cobr Soft", "Player");
+
+    dayOfWeek = settings.value("onAir/day", 6).toInt();
+    hh = settings.value("onAir/hour", 23).toInt();
+    mm = settings.value("onAir/minute", 0).toInt();
+    len = settings.value("onAir/length", 3).toInt();
+}
+
+void calendar::writeSettings()
+{
+    QSettings settings("Cobr Soft", "Player");
+
+    settings.setValue("onAir/day", dayOfWeek);
+    settings.setValue("onAir/hour", hh);
+    settings.setValue("onAir/minute", mm);
+    settings.setValue("onAir/length", len);
 }
 
 bool    calendar::isOnAir()
